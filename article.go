@@ -16,8 +16,8 @@ const (
 
 type Article struct {
 	ID            int
-	Terms         []*Term
-	WeightedTerms map[*Term]float64
+	Terms         []*Meta
+	WeightedTerms map[*Meta]float64
 	ArticleType   int
 	LinkArticle
 	GistArticle
