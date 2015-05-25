@@ -12,13 +12,22 @@ const (
 	NoAccessible        = "no"
 )
 
+type EntityInterface interface {
+	GetID() int
+}
+
 type Entity struct {
+	EntityInterface
 	ID           int
 	IDBucketName string
 	IDKey        string
 	Created      string
 	Updated      string
 	Accessible   string
+}
+
+func (e *Entity) GetID() int {
+	return e.ID
 }
 
 func (e *Entity) saveEntity(db *bolt.DB) {

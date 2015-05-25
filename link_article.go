@@ -7,6 +7,7 @@ const (
 )
 
 type LinkArticle struct {
+	EntityInterface
 	LinkURL string
 }
 
@@ -18,11 +19,11 @@ func (l *Article) loadLinkArticle(db *bolt.DB) {
 
 }
 
-func (l *Article) saveLinkArticle(tx *bolt.Tx) error {
+func (l *LinkArticle) saveLinkArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleLinkURLBucket))
 
-	bID := i2b(l.ID)
+	bID := i2b(l.GetID())
 
 	b.Put(bID, s2b(l.LinkURL))
 
