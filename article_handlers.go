@@ -9,7 +9,7 @@ func ArticlesSearchHandler(res http.ResponseWriter, req *http.Request) {
 
 }
 
-func ArticlesHandler(res http.ResponseWriter, req *http.Request) {
+func ArticlesHandlers(res http.ResponseWriter, req *http.Request) {
 
 	method := req.Method
 

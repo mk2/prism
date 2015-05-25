@@ -10,7 +10,11 @@ type LinkArticle struct {
 	LinkURL string
 }
 
-func (l *LinkArticle) initLinkArticle(args ...interface{}) {
+func (l *LinkArticle) initLinkArticle(values map[string]interface{}) {
+
+}
+
+func (l *Article) loadLinkArticle(db *bolt.DB) {
 
 }
 
