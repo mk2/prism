@@ -14,7 +14,12 @@ const (
 	ArticleTypeBucket = "ArticleTypeBucket"
 )
 
+type ArticleInterface interface {
+	EntityInterface
+}
+
 type Article struct {
+	ArticleInterface
 	Entity
 	Terms         []*Meta
 	WeightedTerms map[*Meta]float64

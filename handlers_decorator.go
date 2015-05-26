@@ -30,7 +30,7 @@ func WithLogin(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func WithEnvValues(fn http.HandlerFunc) http.HandlerFunc {
+func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		var envvar struct {
@@ -51,14 +51,27 @@ func WithEnvValues(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func WithCookieStore(fn http.HandlerFunc) http.HandlerFunc {
+func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		sessionSecret := GetVar(req, "SessionSecret").(string)
 
 		cstore := sessions.NewCookieStore(s2b(sessionSecret))
 
-		SetVar(req, "CookieStore", cstore)
+		SetVar(req, "SessionStore", cstore)
+
+		fn(res, req)
+	}
+}
+
+func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+
+		sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
+		session, _ := sessionStore.Get(req, "prisim")
+
+		session.Values["id"] = "fdafasf"
+		session.Save(req, res)
 
 		fn(res, req)
 	}

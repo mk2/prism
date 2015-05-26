@@ -12,18 +12,29 @@ const (
 	NoAccessible        = "no"
 )
 
+/*
+EntityInterface Entityの基本的な情報にアクセスするためのインターフェース
+*/
 type EntityInterface interface {
 	GetID() int
+	Created() time.Time
+	Updated() time.Time
 }
 
+/*
+Entity 基本的なID振り機能を持たせるための構造
+*/
 type Entity struct {
 	EntityInterface
+
 	ID           int
 	IDBucketName string
 	IDKey        string
-	Created      string
-	Updated      string
-	Accessible   string
+
+	Accessible string
+
+	created string
+	updated string
 }
 
 func (e *Entity) GetID() int {
@@ -53,13 +64,16 @@ func (e *Entity) newID(db *bolt.DB) (int, error) {
 	return newID, result
 }
 
-func (e *Entity) created() {
+func (e *Entity) Created() time.Time {
 	t := time.Now()
-	e.Created = t.Format(CreateUpdatedLayout)
+	e.created = t.Format(CreateUpdatedLayout)
+
+	return t
 }
 
-func (e *Entity) updated() {
+func (e *Entity) Updated() time.Time {
 	t := time.Now()
-	e.Updated = t.Format(CreateUpdatedLayout)
+	e.updated = t.Format(CreateUpdatedLayout)
 
+	return t
 }

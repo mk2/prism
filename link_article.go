@@ -7,7 +7,7 @@ const (
 )
 
 type LinkArticle struct {
-	EntityInterface
+	ArticleInterface
 	LinkURL string
 }
 

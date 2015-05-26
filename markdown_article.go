@@ -7,7 +7,7 @@ const (
 )
 
 type MarkdownArticle struct {
-	EntityInterface
+	ArticleInterface
 	Text string
 }
 
