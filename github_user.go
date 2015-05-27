@@ -1,7 +1,7 @@
 package prism
 
 type GithubUser struct {
-	EntityInterface
+	UserInterface
 	GithubUserName string
 	AccessToken    string
 }
