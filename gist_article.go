@@ -21,7 +21,7 @@ func (a *GistArticle) loadGistArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleGistIDBucket))
 
-	bID := i2b(a.GetID())
+	bID := s2b(a.GetID())
 
 	a.GistID = b2s(b.Get(bID))
 
@@ -33,7 +33,7 @@ func (a *GistArticle) saveGistArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleGistIDBucket))
 
-	bID := i2b(a.GetID())
+	bID := s2b(a.GetID())
 
 	b.Put(bID, s2b(a.GistID))
 

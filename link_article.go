@@ -21,7 +21,7 @@ func (a *LinkArticle) loadLinkArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleLinkURLBucket))
 
-	a.LinkURL = b2s(b.Get(i2b(a.GetID())))
+	a.LinkURL = b2s(b.Get(s2b(a.GetID())))
 
 	return nil
 
@@ -31,7 +31,7 @@ func (a *LinkArticle) saveLinkArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleLinkURLBucket))
 
-	bID := i2b(a.GetID())
+	bID := s2b(a.GetID())
 
 	b.Put(bID, s2b(a.LinkURL))
 

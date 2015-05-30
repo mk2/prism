@@ -127,14 +127,14 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) (a *Article) {
 /*
 LoadArticle アーティクルを読み込む
 */
-func LoadArticle(db *bolt.DB, articleID int) (*Article, error) {
+func LoadArticle(db *bolt.DB, ID string) (*Article, error) {
 
 	a := &Article{}
 
 	err := db.View(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket(s2b(ArticleTypeBucket))
-		articleType := b2i(b.Get(i2b(articleID)))
+		articleType := b2i(b.Get(s2b(ID)))
 
 		// value set
 		switch articleType {

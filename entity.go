@@ -1,6 +1,7 @@
 package prism
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -16,7 +17,7 @@ const (
 EntityInterface Entityの基本的な情報にアクセスするためのインターフェース
 */
 type EntityInterface interface {
-	GetID() int
+	GetID() string
 	Created() time.Time
 	Updated() time.Time
 }
@@ -25,14 +26,14 @@ type EntityInterface interface {
 Entity 基本的なID振り機能を持たせるための構造
 */
 type Entity struct {
-	ID int
+	ID string
 
 	Accessible string
 	created    time.Time
 	updated    time.Time
 }
 
-func (e *Entity) GetID() int {
+func (e *Entity) GetID() string {
 	return e.ID
 }
 
@@ -45,7 +46,7 @@ func (e *Entity) newID(tx *bolt.Tx, bucketName string, key string) error {
 
 	b.Put(s2b(key), i2b(newID))
 
-	e.ID = newID
+	e.ID = strconv.Itoa(newID)
 
 	return nil
 }
@@ -55,7 +56,7 @@ func (e *Entity) Created(tx *bolt.Tx, bucketName string) time.Time {
 	created := e.created.Format(CreateUpdatedLayout)
 
 	b := tx.Bucket(s2b(bucketName))
-	b.Put(i2b(e.ID), s2b(created))
+	b.Put(s2b(e.ID), s2b(created))
 
 	return e.created
 }
@@ -65,7 +66,7 @@ func (e *Entity) Updated(tx *bolt.Tx, bucketName string) time.Time {
 	updated := e.updated.Format(CreateUpdatedLayout)
 
 	b := tx.Bucket(s2b(bucketName))
-	b.Put(i2b(e.ID), s2b(updated))
+	b.Put(s2b(e.ID), s2b(updated))
 
 	return e.updated
 }

@@ -2,6 +2,7 @@ package prism
 
 import (
 	"log"
+	"strconv"
 	"testing"
 
 	"github.com/boltdb/bolt"
@@ -34,7 +35,7 @@ func TestNewArticleID(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		db.Update(article.newArticleID)
 
-		nextArticleID = article.ID
+		nextArticleID, _ = strconv.Atoi(article.ID)
 
 		log.Printf("current:%d new:%d", currentArticleID, nextArticleID)
 

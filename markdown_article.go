@@ -21,7 +21,7 @@ func (a *MarkdownArticle) loadMarkdownArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleMarkdownTextBucket))
 
-	a.Text = b2s(b.Get(i2b(a.GetID())))
+	a.Text = b2s(b.Get(s2b(a.GetID())))
 
 	return nil
 
@@ -31,7 +31,7 @@ func (a *MarkdownArticle) saveMarkdownArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleMarkdownTextBucket))
 
-	b.Put(i2b(a.GetID()), s2b(a.Text))
+	b.Put(s2b(a.GetID()), s2b(a.Text))
 
 	return nil
 
