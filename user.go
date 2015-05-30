@@ -5,7 +5,6 @@ type UserInterface interface {
 }
 
 type User struct {
-	UserInterface
 	ID        int
 	Name      string
 	Anonymous bool

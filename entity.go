@@ -25,53 +25,47 @@ type EntityInterface interface {
 Entity 基本的なID振り機能を持たせるための構造
 */
 type Entity struct {
-	ID           int
-	IDBucketName string
-	IDKey        string
+	ID int
 
 	Accessible string
-
-	created string
-	updated string
+	created    time.Time
+	updated    time.Time
 }
 
 func (e *Entity) GetID() int {
 	return e.ID
 }
 
-func (e *Entity) saveEntity(db *bolt.DB) {
+func (e *Entity) newID(tx *bolt.Tx, bucketName string, key string) error {
 
-}
+	b, _ := tx.CreateBucketIfNotExists(s2b(bucketName))
 
-func (e *Entity) newID(db *bolt.DB) (int, error) {
-
-	tx, _ := db.Begin(true)
-	defer tx.Rollback()
-
-	b, _ := tx.CreateBucketIfNotExists(s2b(e.IDBucketName))
-
-	lastID := b2i(b.Get(s2b(e.IDKey)))
+	lastID := b2i(b.Get(s2b(key)))
 	newID := lastID + 1
 
-	b.Put(s2b(e.IDKey), i2b(newID))
-
-	result := tx.Commit()
+	b.Put(s2b(key), i2b(newID))
 
 	e.ID = newID
 
-	return newID, result
+	return nil
 }
 
-func (e *Entity) Created() time.Time {
-	t := time.Now()
-	e.created = t.Format(CreateUpdatedLayout)
+func (e *Entity) Created(tx *bolt.Tx, bucketName string) time.Time {
+	e.created = time.Now()
+	created := e.created.Format(CreateUpdatedLayout)
 
-	return t
+	b := tx.Bucket(s2b(bucketName))
+	b.Put(i2b(e.ID), s2b(created))
+
+	return e.created
 }
 
-func (e *Entity) Updated() time.Time {
-	t := time.Now()
-	e.updated = t.Format(CreateUpdatedLayout)
+func (e *Entity) Updated(tx *bolt.Tx, bucketName string) time.Time {
+	e.updated = time.Now()
+	updated := e.updated.Format(CreateUpdatedLayout)
 
-	return t
+	b := tx.Bucket(s2b(bucketName))
+	b.Put(i2b(e.ID), s2b(updated))
+
+	return e.updated
 }

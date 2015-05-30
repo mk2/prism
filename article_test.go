@@ -32,7 +32,9 @@ func TestNewArticleID(t *testing.T) {
 	db := NewTestDB()
 
 	for i := 0; i < 10; i++ {
-		nextArticleID, _ = article.newArticleID(db)
+		db.Update(article.newArticleID)
+
+		nextArticleID = article.ID
 
 		log.Printf("current:%d new:%d", currentArticleID, nextArticleID)
 

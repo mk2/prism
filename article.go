@@ -10,8 +10,11 @@ const (
 )
 
 const (
-	ArticleIDBucket   = "ArticleIdBucket"
-	ArticleTypeBucket = "ArticleTypeBucket"
+	ArticleIDBucket         = "ArticleIdBucket"
+	ArticleCreatedBucket    = "ArticleCreatedBucket"
+	ArticleUpdatedBucket    = "ArticleUpdatedBucket"
+	ArticleAccessibleBucket = "ArticleAccessibleBucket"
+	ArticleTypeBucket       = "ArticleTypeBucket"
 )
 
 type ArticleInterface interface {
@@ -38,6 +41,9 @@ func CreateBuckets(db *bolt.DB) error {
 
 	requiredBuckets := []string{
 		ArticleIDBucket,
+		ArticleCreatedBucket,
+		ArticleUpdatedBucket,
+		ArticleAccessibleBucket,
 		ArticleTypeBucket,
 		ArticleLinkURLBucket,
 		ArticleMarkdownTextBucket,
@@ -64,6 +70,9 @@ func DeleteBuckets(db *bolt.DB) error {
 
 	requiredBuckets := []string{
 		ArticleIDBucket,
+		ArticleCreatedBucket,
+		ArticleUpdatedBucket,
+		ArticleAccessibleBucket,
 		ArticleTypeBucket,
 		ArticleLinkURLBucket,
 		ArticleMarkdownTextBucket,
@@ -88,11 +97,10 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) (a *Article) {
 	db.Batch(func(tx *bolt.Tx) error {
 
 		articleType, _ := values["articleType"].(int)
-		articleID, _ := a.newArticleID(db)
+		a.newArticleID(tx)
 
-		a.ID = articleID
-		created := a.Created()
-		updated := a.Updated()
+		created := a.Created(tx, ArticleCreatedBucket)
+		updated := a.Updated(tx, ArticleUpdatedBucket)
 
 		if articleType == ArticleTypeLink {
 			a.initLinkArticle(values)
@@ -102,7 +110,7 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) (a *Article) {
 			a.saveGistArticle(tx)
 		} else if articleType == ArticleTypeMarkdown {
 			a.initMarkdownArticle(values)
-			a.saveMarkdownArticle(tx)
+			a.saveGistArticle(tx)
 		}
 
 		dbg.Printf("Created: %v", created)
@@ -165,10 +173,8 @@ func (a *Article) SaveArticle(db *bolt.DB) error {
 
 }
 
-func (a *Article) newArticleID(db *bolt.DB) (int, error) {
+func (a *Article) newArticleID(tx *bolt.Tx) error {
 
-	a.IDBucketName = ArticleIDBucket
-	a.IDKey = "articleID"
+	return a.newID(tx, ArticleIDBucket, "articleID")
 
-	return a.newID(db)
 }
