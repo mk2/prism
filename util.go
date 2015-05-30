@@ -31,3 +31,12 @@ func i2b(i int) []byte {
 
 	return buf
 }
+
+func i2s(i int) string {
+	return strconv.Itoa(i)
+}
+
+func s2i(s string) int {
+	i, _ := strconv.Atoi(s)
+	return i
+}

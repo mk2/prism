@@ -3,10 +3,9 @@ package prism
 import "github.com/boltdb/bolt"
 
 const (
-	_ = iota
-	ArticleTypeLink
-	ArticleTypeGist
-	ArticleTypeMarkdown
+	ArticleTypeLink     = "link"
+	ArticleTypeGist     = "gist"
+	ArticleTypeMarkdown = "markdown"
 )
 
 const (
@@ -23,12 +22,12 @@ type ArticleInterface interface {
 
 type Article struct {
 	Entity
-	Terms         []*Meta
-	WeightedTerms map[*Meta]float64
-	ArticleType   int
+	ArticleType string
 	LinkArticle
 	GistArticle
 	MarkdownArticle
+
+	Terms []*Meta
 }
 
 func CreateBuckets(db *bolt.DB) error {
@@ -92,35 +91,43 @@ func DeleteBuckets(db *bolt.DB) error {
 /*
 NewArticle 新規アーティクルを作成する
 */
-func NewArticle(db *bolt.DB, values map[string]interface{}) (a *Article) {
+func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 
-	db.Batch(func(tx *bolt.Tx) error {
+	var a Article
+	a.ArticleType, _ = values["ArticleType"].(string)
 
-		articleType, _ := values["articleType"].(int)
+	db.Update(func(tx *bolt.Tx) error {
+
 		a.newArticleID(tx)
+		a.saveArticleType(tx)
 
 		created := a.Created(tx, ArticleCreatedBucket)
 		updated := a.Updated(tx, ArticleUpdatedBucket)
-
-		if articleType == ArticleTypeLink {
-			a.initLinkArticle(values)
-			a.saveLinkArticle(tx)
-		} else if articleType == ArticleTypeGist {
-			a.initGistArticle(values)
-			a.saveGistArticle(tx)
-		} else if articleType == ArticleTypeMarkdown {
-			a.initMarkdownArticle(values)
-			a.saveGistArticle(tx)
-		}
-
 		dbg.Printf("Created: %v", created)
 		dbg.Printf("Updated: %v", updated)
+
+		switch a.ArticleType {
+
+		case ArticleTypeLink:
+			a.LinkArticle.article = &a
+			a.initLinkArticle(values)
+			a.saveLinkArticle(tx)
+
+		case ArticleTypeGist:
+			a.initGistArticle(values)
+			a.saveGistArticle(tx)
+
+		case ArticleTypeMarkdown:
+			a.initMarkdownArticle(values)
+			a.saveGistArticle(tx)
+
+		}
 
 		return nil
 
 	})
 
-	return
+	return &a
 
 }
 
@@ -129,27 +136,38 @@ LoadArticle アーティクルを読み込む
 */
 func LoadArticle(db *bolt.DB, ID string) (*Article, error) {
 
-	a := &Article{}
+	var a Article
+	a.ID = ID
 
 	err := db.View(func(tx *bolt.Tx) error {
 
-		b := tx.Bucket(s2b(ArticleTypeBucket))
-		articleType := b2i(b.Get(s2b(ID)))
+		a.loadArticleType(tx)
+
+		dbg.Printf("ArticleType: %v", a.ArticleType)
 
 		// value set
-		switch articleType {
+		switch a.ArticleType {
+
 		case ArticleTypeLink:
+			a.LinkArticle.article = &a
 			a.loadLinkArticle(tx)
+
 		case ArticleTypeGist:
 			a.loadGistArticle(tx)
+
 		case ArticleTypeMarkdown:
 			a.loadMarkdownArticle(tx)
+
 		}
+
+		dbg.Printf("Finish Reading")
 
 		return nil
 	})
 
-	return a, err
+	dbg.Printf("LoadArticle: %v", a)
+
+	return &a, err
 }
 
 /*
@@ -160,16 +178,37 @@ func (a *Article) SaveArticle(db *bolt.DB) error {
 	return db.Batch(func(tx *bolt.Tx) error {
 
 		switch a.ArticleType {
+
 		case ArticleTypeLink:
 			a.saveLinkArticle(tx)
+
 		case ArticleTypeGist:
 			a.saveMarkdownArticle(tx)
+
 		case ArticleTypeMarkdown:
 			a.saveMarkdownArticle(tx)
+
 		}
 
 		return nil
 	})
+
+}
+
+func (a *Article) saveArticleType(tx *bolt.Tx) error {
+
+	b := tx.Bucket(s2b(ArticleTypeBucket))
+	b.Put(s2b(a.ID), s2b(a.ArticleType))
+
+	return nil
+}
+
+func (a *Article) loadArticleType(tx *bolt.Tx) error {
+
+	b := tx.Bucket(s2b(ArticleTypeBucket))
+	a.ArticleType = b2s(b.Get(s2b(a.ID)))
+
+	return nil
 
 }
 

@@ -1,7 +1,6 @@
 package prism
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -44,9 +43,12 @@ func (e *Entity) newID(tx *bolt.Tx, bucketName string, key string) error {
 	lastID := b2i(b.Get(s2b(key)))
 	newID := lastID + 1
 
+	dbg.Printf("LastID: %d", lastID)
+	dbg.Printf("NewID: %d", newID)
+
 	b.Put(s2b(key), i2b(newID))
 
-	e.ID = strconv.Itoa(newID)
+	e.ID = i2s(newID)
 
 	return nil
 }

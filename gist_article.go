@@ -8,7 +8,8 @@ const (
 
 type GistArticle struct {
 	ArticleInterface
-	GistID string
+	article *Article
+	GistID  string
 }
 
 func (a *GistArticle) initGistArticle(values map[string]interface{}) {

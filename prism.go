@@ -14,7 +14,6 @@ func NewDB() *bolt.DB {
 		log.Fatalln("Error: ", err)
 	}
 
-	DeleteBuckets(db)
 	CreateBuckets(db)
 
 	return db

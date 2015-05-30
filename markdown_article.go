@@ -8,12 +8,13 @@ const (
 
 type MarkdownArticle struct {
 	ArticleInterface
-	Text string
+	article *Article
+	Text    string
 }
 
 func (a *MarkdownArticle) initMarkdownArticle(values map[string]interface{}) {
 
-	a.Text, _ = values["Text"].(string)
+	a.Text, _ = values["MarkdownText"].(string)
 
 }
 

@@ -9,10 +9,13 @@ import (
 )
 
 func ArticlesSearchHandler(res http.ResponseWriter, req *http.Request) {
+	db := GetVar(req, "boltDB").(*bolt.DB)
+	stats := db.Stats()
 
+	Respond(res, req, http.StatusOK, stats)
 }
 
-func ArticlesHandlers(res http.ResponseWriter, req *http.Request) {
+func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 
 	log.Println("Article request incoming")
 
@@ -56,21 +59,34 @@ func ArticlesHandlers(res http.ResponseWriter, req *http.Request) {
 func articlesGetHandler(res http.ResponseWriter, req *http.Request, ID string) {
 	db := GetVar(req, "boltDB").(*bolt.DB)
 
+	dbg.Printf("ID: %d", ID)
+
 	a, _ := LoadArticle(db, ID)
 
-	Respond(res, req, http.StatusOK, a)
+	dbg.Printf("Article: %v", a)
+
+	Respond(res, req, http.StatusOK, *a)
 }
 
 func articlesPostHandler(res http.ResponseWriter, req *http.Request) {
-	d := json.NewDecoder(req.Body)
+	db := GetVar(req, "boltDB").(*bolt.DB)
+	jd := json.NewDecoder(req.Body)
 
-	var a ArticleDto
-	d.Decode(&a)
+	var d ArticleDto
+	jd.Decode(&d)
 
-	dbg.Printf("Posted Article Type: %v", a.ArticleType)
-	dbg.Printf("Posted Article Content: %v", a.ArticleContent)
+	dbg.Printf("Posted Article Type: %v", d.ArticleType)
+	dbg.Printf("Posted Article Content: %v", d.ArticleContent)
 
-	Respond(res, req, http.StatusOK, "ok")
+	a := NewArticle(db, map[string]interface{}{
+		"ArticleType": d.ArticleType,
+	})
+	d.update(a)
+	a.SaveArticle(db)
+
+	Respond(res, req, http.StatusOK, map[string]interface{}{
+		"ArticleID": a.GetID(),
+	})
 }
 
 func articlesPutHandler(res http.ResponseWriter, req *http.Request, ID string) {

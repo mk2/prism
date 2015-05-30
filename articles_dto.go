@@ -11,7 +11,7 @@ type ArticleContentDto struct {
 	MarkdownText string `json:"md_text,omitempty"`
 }
 
-func (d *ArticleDto) update(a *Article) *Article {
+func (d *ArticleDto) update(a *Article) {
 
 	switch d.ArticleType {
 	case "link":
@@ -19,8 +19,14 @@ func (d *ArticleDto) update(a *Article) *Article {
 			"LinkURL": d.ArticleContent.LinkURL,
 		})
 	case "gist":
+		a.initGistArticle(map[string]interface{}{
+			"GistID": d.ArticleContent.GistID,
+		})
+
 	case "markdown":
+		a.initMarkdownArticle(map[string]interface{}{
+			"MarkdownText": d.ArticleContent.MarkdownText,
+		})
 	}
 
-	return a
 }

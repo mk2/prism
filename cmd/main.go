@@ -15,6 +15,7 @@ func main() {
 	log.Println("Start setup Prism")
 
 	db := prism.NewDB()
+	defer db.Close()
 
 	mux := http.NewServeMux()
 
@@ -38,10 +39,13 @@ func main() {
 
 func setupHandlers(db *bolt.DB, mux *http.ServeMux) {
 
-	mux.HandleFunc("/articles/",
-		withBaseDecorators(db, prism.ArticlesHandlers))
+	mux.HandleFunc("/articles",
+		withBaseDecorators(db, prism.ArticlesSearchHandler))
 
-	mux.HandleFunc("/ghoauth/",
+	mux.HandleFunc("/articles/",
+		withBaseDecorators(db, prism.ArticlesCRUDHandlers))
+
+	mux.HandleFunc("/ghoauth",
 		withBaseDecorators(db, prism.GithubOAuthHandlers))
 
 }
