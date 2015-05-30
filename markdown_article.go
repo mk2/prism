@@ -11,27 +11,27 @@ type MarkdownArticle struct {
 	Text string
 }
 
-func (m *MarkdownArticle) initMarkdownArticle(values map[string]interface{}) {
+func (a *MarkdownArticle) initMarkdownArticle(values map[string]interface{}) {
 
-	m.Text, _ = values["Text"].(string)
+	a.Text, _ = values["Text"].(string)
 
 }
 
-func (l *MarkdownArticle) loadMarkdownArticle(tx *bolt.Tx) error {
+func (a *MarkdownArticle) loadMarkdownArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleMarkdownTextBucket))
 
-	l.Text = b2s(b.Get(i2b(l.GetID())))
+	a.Text = b2s(b.Get(i2b(a.GetID())))
 
 	return nil
 
 }
 
-func (l *MarkdownArticle) saveMarkdownArticle(tx *bolt.Tx) error {
+func (a *MarkdownArticle) saveMarkdownArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleMarkdownTextBucket))
 
-	b.Put(i2b(l.GetID()), s2b(l.Text))
+	b.Put(i2b(a.GetID()), s2b(a.Text))
 
 	return nil
 

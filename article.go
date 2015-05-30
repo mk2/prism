@@ -19,7 +19,6 @@ type ArticleInterface interface {
 }
 
 type Article struct {
-	ArticleInterface
 	Entity
 	Terms         []*Meta
 	WeightedTerms map[*Meta]float64
@@ -84,26 +83,34 @@ func DeleteBuckets(db *bolt.DB) error {
 /*
 NewArticle 新規アーティクルを作成する
 */
-func NewArticle(db *bolt.DB, values map[string]interface{}) (article *Article) {
+func NewArticle(db *bolt.DB, values map[string]interface{}) (a *Article) {
 
-	articleType, _ := values["articleType"].(int)
-	articleID, _ := article.newArticleID(db)
+	db.Batch(func(tx *bolt.Tx) error {
 
-	article.ID = articleID
+		articleType, _ := values["articleType"].(int)
+		articleID, _ := a.newArticleID(db)
 
-	if articleType == ArticleTypeLink {
-		article.initLinkArticle(values)
-	} else if articleType == ArticleTypeGist {
-		article.initGistArticle(values)
-	} else if articleType == ArticleTypeMarkdown {
-		article.initMarkdownArticle(values)
-	}
+		a.ID = articleID
+		created := a.Created()
+		updated := a.Updated()
 
-	created := article.Created()
-	updated := article.Updated()
+		if articleType == ArticleTypeLink {
+			a.initLinkArticle(values)
+			a.saveLinkArticle(tx)
+		} else if articleType == ArticleTypeGist {
+			a.initGistArticle(values)
+			a.saveGistArticle(tx)
+		} else if articleType == ArticleTypeMarkdown {
+			a.initMarkdownArticle(values)
+			a.saveMarkdownArticle(tx)
+		}
 
-	dbg.Printf("Created: %v", created)
-	dbg.Printf("Updated: %v", updated)
+		dbg.Printf("Created: %v", created)
+		dbg.Printf("Updated: %v", updated)
+
+		return nil
+
+	})
 
 	return
 
@@ -114,7 +121,7 @@ LoadArticle アーティクルを読み込む
 */
 func LoadArticle(db *bolt.DB, articleID int) (*Article, error) {
 
-	article := &Article{}
+	a := &Article{}
 
 	err := db.View(func(tx *bolt.Tx) error {
 
@@ -124,14 +131,17 @@ func LoadArticle(db *bolt.DB, articleID int) (*Article, error) {
 		// value set
 		switch articleType {
 		case ArticleTypeLink:
+			a.loadLinkArticle(tx)
 		case ArticleTypeGist:
+			a.loadGistArticle(tx)
 		case ArticleTypeMarkdown:
+			a.loadMarkdownArticle(tx)
 		}
 
 		return nil
 	})
 
-	return article, err
+	return a, err
 }
 
 /*
@@ -141,10 +151,13 @@ func (a *Article) SaveArticle(db *bolt.DB) error {
 
 	return db.Batch(func(tx *bolt.Tx) error {
 
-		if a.ArticleType == ArticleTypeLink {
-			db.Update(a.saveLinkArticle)
-		} else if a.ArticleType == ArticleTypeMarkdown {
-			db.Update(a.saveMarkdownArticle)
+		switch a.ArticleType {
+		case ArticleTypeLink:
+			a.saveLinkArticle(tx)
+		case ArticleTypeGist:
+			a.saveMarkdownArticle(tx)
+		case ArticleTypeMarkdown:
+			a.saveMarkdownArticle(tx)
 		}
 
 		return nil

@@ -25,8 +25,6 @@ type EntityInterface interface {
 Entity 基本的なID振り機能を持たせるための構造
 */
 type Entity struct {
-	EntityInterface
-
 	ID           int
 	IDBucketName string
 	IDKey        string

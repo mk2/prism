@@ -11,29 +11,29 @@ type LinkArticle struct {
 	LinkURL string
 }
 
-func (l *LinkArticle) initLinkArticle(values map[string]interface{}) {
+func (a *LinkArticle) initLinkArticle(values map[string]interface{}) {
 
-	l.LinkURL, _ = values["LinkURL"].(string)
+	a.LinkURL, _ = values["LinkURL"].(string)
 
 }
 
-func (l *LinkArticle) loadLinkArticle(tx *bolt.Tx) error {
+func (a *LinkArticle) loadLinkArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleLinkURLBucket))
 
-	l.LinkURL = b2s(b.Get(i2b(l.GetID())))
+	a.LinkURL = b2s(b.Get(i2b(a.GetID())))
 
 	return nil
 
 }
 
-func (l *LinkArticle) saveLinkArticle(tx *bolt.Tx) error {
+func (a *LinkArticle) saveLinkArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleLinkURLBucket))
 
-	bID := i2b(l.GetID())
+	bID := i2b(a.GetID())
 
-	b.Put(bID, s2b(l.LinkURL))
+	b.Put(bID, s2b(a.LinkURL))
 
 	return nil
 
