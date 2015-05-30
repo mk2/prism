@@ -81,10 +81,13 @@ func DeleteBuckets(db *bolt.DB) error {
 	return tx.Commit()
 }
 
+/*
+NewArticle 新規アーティクルを作成する
+*/
 func NewArticle(db *bolt.DB, values map[string]interface{}) (article *Article) {
 
 	articleType, _ := values["articleType"].(int)
-	articleID, _ := article.NewArticleID(db)
+	articleID, _ := article.newArticleID(db)
 
 	article.ID = articleID
 
@@ -96,42 +99,63 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) (article *Article) {
 		article.initMarkdownArticle(values)
 	}
 
+	created := article.Created()
+	updated := article.Updated()
+
+	dbg.Printf("Created: %v", created)
+	dbg.Printf("Updated: %v", updated)
+
 	return
 
 }
 
-func LoadArticle(db *bolt.DB, articleID int) (article *Article) {
+/*
+LoadArticle アーティクルを読み込む
+*/
+func LoadArticle(db *bolt.DB, articleID int) (*Article, error) {
 
-	tx, _ := db.Begin(true)
-	defer tx.Rollback()
+	article := &Article{}
 
-	b := tx.Bucket(s2b(ArticleTypeBucket))
-	articleType := b2i(b.Get(i2b(articleID)))
+	err := db.View(func(tx *bolt.Tx) error {
 
-	// value set
-	switch articleType {
-	case ArticleTypeLink:
-	case ArticleTypeGist:
-	case ArticleTypeMarkdown:
-	}
+		b := tx.Bucket(s2b(ArticleTypeBucket))
+		articleType := b2i(b.Get(i2b(articleID)))
 
-	return
+		// value set
+		switch articleType {
+		case ArticleTypeLink:
+		case ArticleTypeGist:
+		case ArticleTypeMarkdown:
+		}
+
+		return nil
+	})
+
+	return article, err
 }
 
-func (a *Article) NewArticleID(db *bolt.DB) (int, error) {
+/*
+SaveArticle アーティクルを保存する
+*/
+func (a *Article) SaveArticle(db *bolt.DB) error {
+
+	return db.Batch(func(tx *bolt.Tx) error {
+
+		if a.ArticleType == ArticleTypeLink {
+			db.Update(a.saveLinkArticle)
+		} else if a.ArticleType == ArticleTypeMarkdown {
+			db.Update(a.saveMarkdownArticle)
+		}
+
+		return nil
+	})
+
+}
+
+func (a *Article) newArticleID(db *bolt.DB) (int, error) {
 
 	a.IDBucketName = ArticleIDBucket
 	a.IDKey = "articleID"
 
 	return a.newID(db)
-}
-
-func (a *Article) Save(db *bolt.DB) {
-
-	if a.ArticleType == ArticleTypeLink {
-		db.Update(a.saveLinkArticle)
-	} else if a.ArticleType == ArticleTypeMarkdown {
-		db.Update(a.saveMarkdownArticle)
-	}
-
 }

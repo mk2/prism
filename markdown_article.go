@@ -11,7 +11,19 @@ type MarkdownArticle struct {
 	Text string
 }
 
-func (m *MarkdownArticle) initMarkdownArticle(args ...interface{}) {
+func (m *MarkdownArticle) initMarkdownArticle(values map[string]interface{}) {
+
+	m.Text, _ = values["Text"].(string)
+
+}
+
+func (l *MarkdownArticle) loadMarkdownArticle(tx *bolt.Tx) error {
+
+	b := tx.Bucket(s2b(ArticleMarkdownTextBucket))
+
+	l.Text = b2s(b.Get(i2b(l.GetID())))
+
+	return nil
 
 }
 

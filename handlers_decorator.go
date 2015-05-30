@@ -7,6 +7,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/sessions"
 	"github.com/joeshaw/envdecode"
+	"github.com/mk2/prism/env"
 )
 
 func WithVars(fn http.HandlerFunc) http.HandlerFunc {
@@ -34,8 +35,8 @@ func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		var envvar struct {
-			GithubAPIKey    string `env:"GITHUB_APIKEY,required"`
-			GithubAPISecret string `env:"GITHUB_APISECRET,required"`
+			GithubAPIKey    string `env:"GITHUB_CLIENTID,required"`
+			GithubAPISecret string `env:"GITHUB_CLIENTSECRET,required"`
 			SessionSecret   string `env:"SESSION_SECRET,required"`
 		}
 
@@ -43,8 +44,8 @@ func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
 			log.Fatalln(err)
 		}
 
-		SetVar(req, "GithubAPIKey", envvar.GithubAPIKey)
-		SetVar(req, "GithubAPISecret", envvar.GithubAPISecret)
+		SetVar(req, "GithubClientID", envvar.GithubAPIKey)
+		SetVar(req, "GithubClientSecret", envvar.GithubAPISecret)
 		SetVar(req, "SessionSecret", envvar.SessionSecret)
 
 		fn(res, req)
@@ -73,6 +74,19 @@ func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
 		session.Values["id"] = "fdafasf"
 		session.Save(req, res)
 
+		fn(res, req)
+	}
+}
+
+func WithCORS(fn http.HandlerFunc) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		if env.Debug {
+			res.Header().Set("Access-Control-Allow-Origin", "*")
+		} else {
+			res.Header().Set("Access-Control-Allow-Origin", "https://prism-client.github.io/")
+		}
+		res.Header().Set("Access-Control-Expose-Headers", "Location")
+		res.Header().Set("Access-Control-Allow-Credentials", "true")
 		fn(res, req)
 	}
 }
