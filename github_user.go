@@ -1,7 +1,7 @@
 package prism
 
 type GithubUser struct {
-	UserInterface
+	user           *User
 	GithubUserName string
 	AccessToken    string
 }
