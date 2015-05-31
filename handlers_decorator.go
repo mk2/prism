@@ -11,6 +11,7 @@ import (
 )
 
 func WithVars(fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 		OpenVars(req)
 		defer CloseVars(req)
@@ -19,6 +20,7 @@ func WithVars(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func WithBoltDB(db *bolt.DB, fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 		SetVar(req, "boltDB", db)
 		fn(res, req)
@@ -26,12 +28,14 @@ func WithBoltDB(db *bolt.DB, fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func WithLogin(fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 		fn(res, req)
 	}
 }
 
 func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		var envvar struct {
@@ -53,6 +57,7 @@ func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		sessionSecret := GetVar(req, "SessionSecret").(string)
@@ -66,6 +71,7 @@ func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
@@ -79,6 +85,7 @@ func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func WithCORS(fn http.HandlerFunc) http.HandlerFunc {
+
 	return func(res http.ResponseWriter, req *http.Request) {
 		if env.Debug {
 			res.Header().Set("Access-Control-Allow-Origin", "*")

@@ -3,6 +3,7 @@ package prism
 import "testing"
 
 func TestNewPath(t *testing.T) {
+
 	test_data := map[string]*Path{
 		"articles/": &Path{
 			resourceType: "articles",

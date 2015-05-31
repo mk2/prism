@@ -103,6 +103,7 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 
 		created := a.Created(tx, ArticleCreatedBucket)
 		updated := a.Updated(tx, ArticleUpdatedBucket)
+
 		dbg.Printf("Created: %v", created)
 		dbg.Printf("Updated: %v", updated)
 
@@ -114,10 +115,12 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 			a.saveLinkArticle(tx)
 
 		case ArticleTypeGist:
+			a.GistArticle.article = &a
 			a.initGistArticle(values)
 			a.saveGistArticle(tx)
 
 		case ArticleTypeMarkdown:
+			a.MarkdownArticle.article = &a
 			a.initMarkdownArticle(values)
 			a.saveGistArticle(tx)
 
@@ -128,7 +131,6 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 	})
 
 	return &a
-
 }
 
 /*
@@ -194,7 +196,6 @@ func (a *Article) SaveArticle(db *bolt.DB) error {
 
 		return nil
 	})
-
 }
 
 func (a *Article) saveArticleType(tx *bolt.Tx) error {
@@ -211,11 +212,9 @@ func (a *Article) loadArticleType(tx *bolt.Tx) error {
 	a.ArticleType = b2s(b.Get(s2b(a.ID)))
 
 	return nil
-
 }
 
 func (a *Article) newArticleID(tx *bolt.Tx) error {
 
 	return a.newID(tx, ArticleIDBucket, "articleID")
-
 }

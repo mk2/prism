@@ -14,7 +14,6 @@ type LinkArticle struct {
 func (a *LinkArticle) initLinkArticle(values map[string]interface{}) {
 
 	a.LinkURL, _ = values["LinkURL"].(string)
-
 }
 
 func (a *LinkArticle) loadLinkArticle(tx *bolt.Tx) error {
@@ -24,7 +23,6 @@ func (a *LinkArticle) loadLinkArticle(tx *bolt.Tx) error {
 	a.LinkURL = b2s(b.Get(s2b(a.article.GetID())))
 
 	return nil
-
 }
 
 func (a *LinkArticle) saveLinkArticle(tx *bolt.Tx) error {
@@ -37,5 +35,4 @@ func (a *LinkArticle) saveLinkArticle(tx *bolt.Tx) error {
 	b.Put(bID, s2b(a.LinkURL))
 
 	return nil
-
 }

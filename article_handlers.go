@@ -2,22 +2,18 @@ package prism
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/boltdb/bolt"
 )
 
 func ArticlesSearchHandler(res http.ResponseWriter, req *http.Request) {
-	db := GetVar(req, "boltDB").(*bolt.DB)
-	stats := db.Stats()
 
-	Respond(res, req, http.StatusOK, stats)
 }
 
 func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 
-	log.Println("Article request incoming")
+	dbg.Printf("Article request incoming")
 
 	method := req.Method
 
@@ -53,7 +49,6 @@ func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 	}
 
 	RespondErr(res, req, http.StatusBadRequest, "not found")
-
 }
 
 func articlesGetHandler(res http.ResponseWriter, req *http.Request, ID string) {

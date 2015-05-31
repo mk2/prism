@@ -17,10 +17,12 @@ type PathInterface interface {
 }
 
 func (p *Path) hasID() bool {
+
 	return len(p.ID) > 0
 }
 
 func NewPath(str string) *Path {
+
 	str = strings.Trim(str, PathSeparator)
 	tokens := strings.Split(str, PathSeparator)
 

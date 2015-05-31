@@ -39,11 +39,14 @@ func main() {
 
 func setupHandlers(db *bolt.DB, mux *http.ServeMux) {
 
-	mux.HandleFunc("/articles",
-		withBaseDecorators(db, prism.ArticlesSearchHandler))
+	mux.HandleFunc("/stats",
+		prism.WithVars(prism.WithBoltDB(db, prism.StatsHandler)))
 
 	mux.HandleFunc("/articles/",
 		withBaseDecorators(db, prism.ArticlesCRUDHandlers))
+
+	mux.HandleFunc("/articles",
+		withBaseDecorators(db, prism.ArticlesSearchHandler))
 
 	mux.HandleFunc("/ghoauth",
 		withBaseDecorators(db, prism.GithubOAuthHandlers))

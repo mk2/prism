@@ -33,6 +33,7 @@ type Entity struct {
 }
 
 func (e *Entity) GetID() string {
+
 	return e.ID
 }
 
@@ -54,6 +55,7 @@ func (e *Entity) newID(tx *bolt.Tx, bucketName string, key string) error {
 }
 
 func (e *Entity) Created(tx *bolt.Tx, bucketName string) time.Time {
+
 	e.created = time.Now()
 	created := e.created.Format(CreateUpdatedLayout)
 
@@ -64,6 +66,7 @@ func (e *Entity) Created(tx *bolt.Tx, bucketName string) time.Time {
 }
 
 func (e *Entity) Updated(tx *bolt.Tx, bucketName string) time.Time {
+
 	e.updated = time.Now()
 	updated := e.updated.Format(CreateUpdatedLayout)
 

@@ -15,7 +15,6 @@ type MarkdownArticle struct {
 func (a *MarkdownArticle) initMarkdownArticle(values map[string]interface{}) {
 
 	a.Text, _ = values["MarkdownText"].(string)
-
 }
 
 func (a *MarkdownArticle) loadMarkdownArticle(tx *bolt.Tx) error {
@@ -25,7 +24,6 @@ func (a *MarkdownArticle) loadMarkdownArticle(tx *bolt.Tx) error {
 	a.Text = b2s(b.Get(s2b(a.GetID())))
 
 	return nil
-
 }
 
 func (a *MarkdownArticle) saveMarkdownArticle(tx *bolt.Tx) error {
@@ -35,5 +33,4 @@ func (a *MarkdownArticle) saveMarkdownArticle(tx *bolt.Tx) error {
 	b.Put(s2b(a.GetID()), s2b(a.Text))
 
 	return nil
-
 }

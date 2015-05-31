@@ -17,5 +17,4 @@ func NewDB() *bolt.DB {
 	CreateBuckets(db)
 
 	return db
-
 }

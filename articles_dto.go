@@ -14,10 +14,12 @@ type ArticleContentDto struct {
 func (d *ArticleDto) update(a *Article) {
 
 	switch d.ArticleType {
+
 	case "link":
 		a.initLinkArticle(map[string]interface{}{
 			"LinkURL": d.ArticleContent.LinkURL,
 		})
+
 	case "gist":
 		a.initGistArticle(map[string]interface{}{
 			"GistID": d.ArticleContent.GistID,
@@ -27,6 +29,6 @@ func (d *ArticleDto) update(a *Article) {
 		a.initMarkdownArticle(map[string]interface{}{
 			"MarkdownText": d.ArticleContent.MarkdownText,
 		})
-	}
 
+	}
 }

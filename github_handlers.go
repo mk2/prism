@@ -16,7 +16,6 @@ func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
 	}
 
 	RespondErr(res, req, http.StatusBadRequest, "invalid request")
-
 }
 
 func githubOAuthInfoHandler(res http.ResponseWriter, req *http.Request) {
@@ -29,5 +28,4 @@ func githubOAuthInfoHandler(res http.ResponseWriter, req *http.Request) {
 		"github_redirect_uri": "http://localhost:13333/ghoauth/redirect",
 		"state":               "dummy",
 	})
-
 }
