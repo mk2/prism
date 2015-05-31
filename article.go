@@ -153,9 +153,11 @@ func LoadArticle(db *bolt.DB, ID string) (*Article, error) {
 			a.loadLinkArticle(tx)
 
 		case ArticleTypeGist:
+			a.GistArticle.article = &a
 			a.loadGistArticle(tx)
 
 		case ArticleTypeMarkdown:
+			a.MarkdownArticle.article = &a
 			a.loadMarkdownArticle(tx)
 
 		}

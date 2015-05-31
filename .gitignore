@@ -26,3 +26,4 @@ _testmain.go
 *.sublime-workspace
 *.boltdb
 *.exe
+cmd/prism
