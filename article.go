@@ -26,8 +26,6 @@ type Article struct {
 	LinkArticle
 	GistArticle
 	MarkdownArticle
-
-	Terms []*Meta
 }
 
 func CreateBuckets(db *bolt.DB) error {
