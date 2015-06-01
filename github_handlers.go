@@ -11,15 +11,19 @@ import (
 func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
 
 	tokens := strings.Split(req.URL.Path, "/")
-	action := tokens[2]
+	action := tokens[3]
+
+	dbg.Printf("action: %s", action)
 
 	switch action {
 
 	case "login":
 		githubLoginHandler(res, req)
+		return
 
 	case "callback":
 		githubCallbackHandler(res, req)
+		return
 
 	}
 
@@ -28,9 +32,13 @@ func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
 
 func githubLoginHandler(res http.ResponseWriter, req *http.Request) {
 
-	var clientID, status string = GetVar(req, "GithubClientID").(string), "dummy"
+	var clientID,
+		state,
+		reqURL string = GetVar(req, "GithubClientID").(string), "dummy", "https://github.com/login/oauth/authorize"
 
-	loginURL := fmt.Sprintf("http://github.com/login/oauth/authorize?client_id=%s&status=%s", clientID, status)
+	loginURL := fmt.Sprintf("%s?client_id=%s&state=%s", reqURL, clientID, state)
+
+	dbg.Printf("login url: %s", loginURL)
 
 	res.Header().Set("Location", loginURL)
 	res.WriteHeader(http.StatusTemporaryRedirect)
@@ -38,13 +46,16 @@ func githubLoginHandler(res http.ResponseWriter, req *http.Request) {
 
 func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 
+	req.ParseForm()
+
 	var code,
-		status,
+		state,
 		clientID,
 		clientSecret,
-		atURL string = req.Form.Get("code"), req.Form.Get("status"), GetVar(req, "GithubClientID").(string), GetVar(req, "GithubClientSecret").(string), "https://github.com/login/oauth/access_token"
+		atURL string = req.FormValue("code"), req.FormValue("state"), GetVar(req, "GithubClientID").(string), GetVar(req, "GithubClientSecret").(string), "https://github.com/login/oauth/access_token"
 
-	dbg.Printf("Status: %s", status)
+	dbg.Printf("code: %s", code)
+	dbg.Printf("state: %s", state)
 
 	q := url.Values{}
 	q.Set("client_id", clientID)
@@ -60,4 +71,6 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 	accessToken := authRes.Get("access_token")
 
 	dbg.Printf("AccessToken: %s", accessToken)
+
+	Respond(res, req, http.StatusOK, "ok")
 }
