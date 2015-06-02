@@ -62,9 +62,9 @@ func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
 
 		sessionSecret := GetVar(req, "SessionSecret").(string)
 
-		cstore := sessions.NewCookieStore(s2b(sessionSecret))
+		sstore := sessions.NewFilesystemStore("prism.sessions", s2b(sessionSecret))
 
-		SetVar(req, "SessionStore", cstore)
+		SetVar(req, "SessionStore", sstore)
 
 		fn(res, req)
 	}
@@ -74,8 +74,8 @@ func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
 
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
-		session, _ := sessionStore.Get(req, "prisim")
+		sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
+		session, _ := sessionStore.Get(req, "prism")
 
 		session.Values["id"] = "fdafasf"
 		session.Save(req, res)

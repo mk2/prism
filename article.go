@@ -91,7 +91,7 @@ NewArticle 新規アーティクルを作成する
 */
 func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 
-	var a Article
+	var a Article = Article{}
 	a.ArticleType, _ = values["ArticleType"].(string)
 
 	db.Update(func(tx *bolt.Tx) error {
@@ -136,7 +136,7 @@ LoadArticle アーティクルを読み込む
 */
 func LoadArticle(db *bolt.DB, ID string) (*Article, error) {
 
-	var a Article
+	var a Article = Article{}
 	a.ID = ID
 
 	err := db.View(func(tx *bolt.Tx) error {

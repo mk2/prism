@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/gorilla/sessions"
 )
 
 func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
@@ -36,7 +38,12 @@ func githubLoginHandler(res http.ResponseWriter, req *http.Request) {
 		state,
 		reqURL string = GetVar(req, "GithubClientID").(string), "dummy", "https://github.com/login/oauth/authorize"
 
-	loginURL := fmt.Sprintf("%s?client_id=%s&state=%s", reqURL, clientID, state)
+	q := url.Values{}
+	q.Set("client_id", clientID)
+	q.Set("state", state)
+	q.Set("scope", "gist")
+
+	loginURL := fmt.Sprintf("%s?%s", reqURL, q.Encode())
 
 	dbg.Printf("login url: %s", loginURL)
 
@@ -71,6 +78,12 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 	accessToken := authRes.Get("access_token")
 
 	dbg.Printf("AccessToken: %s", accessToken)
+
+	sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
+	session, _ := sessionStore.Get(req, "prism")
+
+	session.Values["access_token"] = accessToken
+	session.Save(req, res)
 
 	Respond(res, req, http.StatusOK, "ok")
 }

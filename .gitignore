@@ -27,3 +27,5 @@ _testmain.go
 *.boltdb
 *.exe
 cmd/prism
+
+Godeps/_workspace
