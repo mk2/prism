@@ -29,3 +29,6 @@ _testmain.go
 cmd/prism
 
 Godeps/_workspace
+
+*.iml
+.idea/
