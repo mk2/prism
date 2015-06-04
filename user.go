@@ -20,10 +20,10 @@ type UserInterface interface {
 
 type User struct {
 	Entity
+	GithubUser
 	Name             string
 	UserAuthProvider string
 	Anonymous        string
-	GithubUser
 }
 
 func CreateUserBuckets(db *bolt.DB) error {
@@ -99,7 +99,26 @@ func NewUser(db *bolt.DB) *User {
 	})
 
 	return &u
+}
 
+func LoadUser(db *bolt.DB, ID string) *User {
+
+	var u User = User{}
+	u.ID = ID
+
+	db.View(func(tx *bolt.Tx) error {
+
+		switch u.UserAuthProvider {
+
+		case UserAuthProviderGithub:
+			u.loadGithubUser(tx)
+
+		}
+
+		return nil
+	})
+
+	return &u
 }
 
 func (u *User) SaveUser(db *bolt.DB) error {
@@ -115,7 +134,6 @@ func (u *User) SaveUser(db *bolt.DB) error {
 
 		return nil
 	})
-
 }
 
 func (u *User) newUserID(tx *bolt.Tx) error {

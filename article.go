@@ -28,7 +28,7 @@ type Article struct {
 	MarkdownArticle
 }
 
-func CreateBuckets(db *bolt.DB) error {
+func CreateArticleBuckets(db *bolt.DB) error {
 
 	tx, err := db.Begin(true)
 	if err != nil {
@@ -57,7 +57,7 @@ func CreateBuckets(db *bolt.DB) error {
 	return tx.Commit()
 }
 
-func DeleteBuckets(db *bolt.DB) error {
+func DeleteArticleBuckets(db *bolt.DB) error {
 
 	tx, err := db.Begin(true)
 	if err != nil {

@@ -20,6 +20,26 @@ type GithubUser struct {
 	AccessToken    string
 }
 
+func LoadGithubUser(db *bolt.DB, accessToken string) *User {
+
+	var userID, githubUserID string
+
+	db.View(func(tx *bolt.Tx) error {
+
+		var b *bolt.Bucket
+
+		b = tx.Bucket(s2b(AccessTokenToGithubUserIDBucket))
+		githubUserID = b2s(b.Get(s2b(accessToken)))
+
+		b = tx.Bucket(s2b(GithubUserIDToUserIDBucket))
+		userID = b2s(b.Get(s2b(githubUserID)))
+
+		return nil
+	})
+
+	return LoadUser(db, userID)
+}
+
 func (u *GithubUser) saveGithubUser(tx *bolt.Tx) error {
 
 	if u.user.Anonymous == "true" {
@@ -54,16 +74,13 @@ func (u *GithubUser) loadGithubUser(tx *bolt.Tx) error {
 	b = tx.Bucket(s2b(UserIDToGithubUserIDBucket))
 	u.GithubUserID = b2s(b.Get(s2b(u.user.ID)))
 
-	b = tx.Bucket(s2b(UserNameBucket))
-	u.GithubUserName = b2s(b.Get(s2b(u.user.ID)))
-
 	b = tx.Bucket(s2b(GithubUserNameBucket))
-	b.Put(s2b(u.user.ID), s2b(u.GithubUserName))
+	u.GithubUserName = b2s(b.Get(s2b(u.user.ID)))
 
 	return nil
 }
 
-func (u *GithubUser) ProvideAuth(accessToken string) {
+func (u *GithubUser) provideGithubAuth(accessToken string) {
 
 	u.user.Anonymous = "false"
 	u.AccessToken = accessToken

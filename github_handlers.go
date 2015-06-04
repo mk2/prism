@@ -82,7 +82,7 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 	sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
 	session, _ := sessionStore.Get(req, "prism")
 
-	session.Values["access_token"] = accessToken
+	session.Values["gh_access_token"] = accessToken
 	session.Save(req, res)
 
 	Respond(res, req, http.StatusOK, "ok")

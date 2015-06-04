@@ -70,6 +70,33 @@ func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func WithUser(fn http.HandlerFunc) http.HandlerFunc {
+
+	return func(res http.ResponseWriter, req *http.Request) {
+
+		db := GetVar(req, "boltDB").(*bolt.DB)
+
+		sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
+		session, _ := sessionStore.Get(req, "prism")
+
+		accessToken, exist := session.Values["gh_access_token"]
+
+		var u *User
+
+		if exist {
+			// アクセストークンがあればユーザー情報をロード
+			u = LoadGithubUser(db, accessToken.(string))
+		} else {
+			// 無ければ匿名ユーザー情報を作成する
+			u = NewUser(db)
+		}
+
+		SetVar(req, "CurrentUser", u)
+
+		fn(res, req)
+	}
+}
+
 func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
 
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -77,7 +104,6 @@ func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
 		sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
 		session, _ := sessionStore.Get(req, "prism")
 
-		session.Values["id"] = "fdafasf"
 		session.Save(req, res)
 
 		fn(res, req)

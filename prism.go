@@ -14,7 +14,8 @@ func NewDB() *bolt.DB {
 		log.Fatalln("Error: ", err)
 	}
 
-	CreateBuckets(db)
+	CreateArticleBuckets(db)
+	CreateUserBuckets(db)
 
 	return db
 }

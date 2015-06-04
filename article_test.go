@@ -20,8 +20,8 @@ func NewTestDB() *bolt.DB {
 		log.Fatalln("Error: ", err)
 	}
 
-	DeleteBuckets(db)
-	CreateBuckets(db)
+	DeleteArticleBuckets(db)
+	CreateArticleBuckets(db)
 
 	return db
 }
