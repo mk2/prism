@@ -62,7 +62,7 @@ func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
 
 		sessionSecret := GetVar(req, "SessionSecret").(string)
 
-		sstore := sessions.NewFilesystemStore("prism.sessions", s2b(sessionSecret))
+		sstore := sessions.NewCookieStore(s2b(sessionSecret))
 
 		SetVar(req, "SessionStore", sstore)
 
@@ -76,10 +76,12 @@ func WithUser(fn http.HandlerFunc) http.HandlerFunc {
 
 		db := GetVar(req, "boltDB").(*bolt.DB)
 
-		sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
+		sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
 		session, _ := sessionStore.Get(req, "prism")
 
 		accessToken, exist := session.Values["gh_access_token"]
+
+		dbg.Printf("AccessToken In Request: %v", accessToken)
 
 		var u *User
 
@@ -97,28 +99,14 @@ func WithUser(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func WithSessionID(fn http.HandlerFunc) http.HandlerFunc {
-
-	return func(res http.ResponseWriter, req *http.Request) {
-
-		sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
-		session, _ := sessionStore.Get(req, "prism")
-
-		session.Save(req, res)
-
-		fn(res, req)
-	}
-}
-
 func WithCORS(fn http.HandlerFunc) http.HandlerFunc {
 
 	return func(res http.ResponseWriter, req *http.Request) {
 		if env.Debug {
-			res.Header().Set("Access-Control-Allow-Origin", "*")
+			res.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
 		} else {
-			res.Header().Set("Access-Control-Allow-Origin", "https://prism-client.github.io/")
+			res.Header().Set("Access-Control-Allow-Origin", "https://prism-client.github.io")
 		}
-		res.Header().Set("Access-Control-Expose-Headers", "Location")
 		res.Header().Set("Access-Control-Allow-Credentials", "true")
 		fn(res, req)
 	}

@@ -40,6 +40,10 @@ func CreateUserBuckets(db *bolt.DB) error {
 		UserNameBucket,
 		UserCreatedBucket,
 		UserUpdatedBucket,
+		AccessTokenToGithubUserIDBucket,
+		GithubUserIDToUserIDBucket,
+		UserIDToGithubUserIDBucket,
+		GithubUserNameBucket,
 	}
 
 	for _, requiredBucket := range requiredBuckets {
@@ -82,7 +86,7 @@ func DeleteUserBuckets(db *bolt.DB) error {
 
 func NewUser(db *bolt.DB) *User {
 
-	var u User = User{}
+	var u User
 
 	db.Update(func(tx *bolt.Tx) error {
 
@@ -103,7 +107,7 @@ func NewUser(db *bolt.DB) *User {
 
 func LoadUser(db *bolt.DB, ID string) *User {
 
-	var u User = User{}
+	var u User
 	u.ID = ID
 
 	db.View(func(tx *bolt.Tx) error {

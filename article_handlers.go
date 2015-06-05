@@ -52,6 +52,7 @@ func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 }
 
 func articlesGetHandler(res http.ResponseWriter, req *http.Request, ID string) {
+
 	db := GetVar(req, "boltDB").(*bolt.DB)
 
 	dbg.Printf("ID: %d", ID)
@@ -64,6 +65,7 @@ func articlesGetHandler(res http.ResponseWriter, req *http.Request, ID string) {
 }
 
 func articlesPostHandler(res http.ResponseWriter, req *http.Request) {
+
 	db := GetVar(req, "boltDB").(*bolt.DB)
 	jd := json.NewDecoder(req.Body)
 
@@ -85,6 +87,7 @@ func articlesPostHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func articlesPutHandler(res http.ResponseWriter, req *http.Request, ID string) {
+
 	db := GetVar(req, "boltDB").(*bolt.DB)
 	jd := json.NewDecoder(req.Body)
 

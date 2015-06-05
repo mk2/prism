@@ -55,6 +55,6 @@ func setupHandlers(db *bolt.DB, mux *http.ServeMux) {
 
 func withBaseDecorators(db *bolt.DB, fn http.HandlerFunc) http.HandlerFunc {
 
-	return prism.WithCORS(prism.WithVars(prism.WithEnvVars(prism.WithSessionStore(prism.WithBoltDB(db, fn)))))
+	return prism.WithCORS(prism.WithVars(prism.WithEnvVars(prism.WithSessionStore(prism.WithBoltDB(db, prism.WithUser(fn))))))
 
 }

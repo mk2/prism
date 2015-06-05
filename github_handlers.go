@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/boltdb/bolt"
 	"github.com/gorilla/sessions"
 )
 
@@ -61,6 +62,10 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 		clientSecret,
 		atURL string = req.FormValue("code"), req.FormValue("state"), GetVar(req, "GithubClientID").(string), GetVar(req, "GithubClientSecret").(string), "https://github.com/login/oauth/access_token"
 
+	var u *User = GetVar(req, "CurrentUser").(*User)
+
+	var db *bolt.DB = GetVar(req, "boltDB").(*bolt.DB)
+
 	dbg.Printf("code: %s", code)
 	dbg.Printf("state: %s", state)
 
@@ -79,11 +84,20 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 
 	dbg.Printf("AccessToken: %s", accessToken)
 
-	sessionStore := GetVar(req, "SessionStore").(*sessions.FilesystemStore)
+	sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
 	session, _ := sessionStore.Get(req, "prism")
 
 	session.Values["gh_access_token"] = accessToken
 	session.Save(req, res)
 
-	Respond(res, req, http.StatusOK, "ok")
+	u.AccessToken = accessToken
+
+	u.SaveUser(db)
+
+	Respond(res, req, http.StatusOK, map[string]interface{}{
+		"status": "ok",
+		"user": map[string]string{
+			"name": u.Name,
+		},
+	})
 }
