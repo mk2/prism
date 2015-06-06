@@ -42,7 +42,7 @@ func LoadGithubUser(db *bolt.DB, accessToken string) *User {
 
 func (u *GithubUser) saveGithubUser(tx *bolt.Tx) error {
 
-	if u.user.Anonymous == "true" {
+	if u.user.anonymous == "true" {
 		return errors.New("Anonymous User!")
 	}
 
@@ -52,37 +52,37 @@ func (u *GithubUser) saveGithubUser(tx *bolt.Tx) error {
 	b.Put(s2b(u.AccessToken), s2b(u.GithubUserID))
 
 	b = tx.Bucket(s2b(GithubUserIDToUserIDBucket))
-	b.Put(s2b(u.GithubUserID), s2b(u.user.ID))
+	b.Put(s2b(u.GithubUserID), s2b(u.user.id))
 
 	b = tx.Bucket(s2b(UserIDToGithubUserIDBucket))
-	b.Put(s2b(u.user.ID), s2b(u.GithubUserID))
+	b.Put(s2b(u.user.id), s2b(u.GithubUserID))
 
 	b = tx.Bucket(s2b(GithubUserNameBucket))
-	b.Put(s2b(u.user.ID), s2b(u.GithubUserName))
+	b.Put(s2b(u.user.id), s2b(u.GithubUserName))
 
 	return nil
 }
 
 func (u *GithubUser) loadGithubUser(tx *bolt.Tx) error {
 
-	if u.user.Anonymous == "true" {
+	if u.user.anonymous == "true" {
 		return errors.New("Anonymous User!")
 	}
 
 	var b *bolt.Bucket
 
 	b = tx.Bucket(s2b(UserIDToGithubUserIDBucket))
-	u.GithubUserID = b2s(b.Get(s2b(u.user.ID)))
+	u.GithubUserID = b2s(b.Get(s2b(u.user.id)))
 
 	b = tx.Bucket(s2b(GithubUserNameBucket))
-	u.GithubUserName = b2s(b.Get(s2b(u.user.ID)))
+	u.GithubUserName = b2s(b.Get(s2b(u.user.id)))
 
 	return nil
 }
 
 func (u *GithubUser) provideGithubAuth(accessToken string) {
 
-	u.user.Anonymous = "false"
+	u.user.anonymous = "false"
 	u.AccessToken = accessToken
 
 }

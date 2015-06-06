@@ -7,7 +7,7 @@ const (
 )
 
 type MarkdownArticle struct {
-	ArticleInterface
+	ArticleIface
 	article *Article
 	Text    string
 }

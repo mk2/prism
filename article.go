@@ -1,6 +1,9 @@
 package prism
 
-import "github.com/boltdb/bolt"
+import (
+	"bytes"
+	"github.com/boltdb/bolt"
+)
 
 const (
 	ArticleTypeLink     = "link"
@@ -9,23 +12,28 @@ const (
 )
 
 const (
-	ArticleIDBucket         = "ArticleIdBucket"
-	ArticleCreatedBucket    = "ArticleCreatedBucket"
-	ArticleUpdatedBucket    = "ArticleUpdatedBucket"
-	ArticleAccessibleBucket = "ArticleAccessibleBucket"
-	ArticleTypeBucket       = "ArticleTypeBucket"
+	ArticleIDBucket                 = "ArticleIdBucket"
+	ArticleOwnerIDToArticleIDBucket = "ArticleIDToArticleOwnerIDBucket"
+	ArticleIDToArticleOwnerIDBucket = "ArticleIDToArticleOwnerIDBucket"
+	ArticleCreatedBucket            = "ArticleCreatedBucket"
+	ArticleUpdatedBucket            = "ArticleUpdatedBucket"
+	ArticleAccessibleBucket         = "ArticleAccessibleBucket"
+	ArticleTypeBucket               = "ArticleTypeBucket"
 )
 
-type ArticleInterface interface {
-	EntityInterface
+type ArticleIface interface {
+	EntityIface
+	GistArticleIface
 }
 
 type Article struct {
 	Entity
-	ArticleType string
 	LinkArticle
 	GistArticle
 	MarkdownArticle
+
+	articleType    string
+	articleOwnerID string
 }
 
 func CreateArticleBuckets(db *bolt.DB) error {
@@ -38,6 +46,7 @@ func CreateArticleBuckets(db *bolt.DB) error {
 
 	requiredBuckets := []string{
 		ArticleIDBucket,
+		ArticleOwnerIDToArticleIDBucket,
 		ArticleCreatedBucket,
 		ArticleUpdatedBucket,
 		ArticleAccessibleBucket,
@@ -67,6 +76,7 @@ func DeleteArticleBuckets(db *bolt.DB) error {
 
 	requiredBuckets := []string{
 		ArticleIDBucket,
+		ArticleOwnerIDToArticleIDBucket,
 		ArticleCreatedBucket,
 		ArticleUpdatedBucket,
 		ArticleAccessibleBucket,
@@ -89,14 +99,16 @@ func DeleteArticleBuckets(db *bolt.DB) error {
 /*
 NewArticle 新規アーティクルを作成する
 */
-func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
+func NewArticle(db *bolt.DB, options map[string]interface{}) *Article {
 
 	var a Article
-	a.ArticleType, _ = values["ArticleType"].(string)
+	a.articleType, _ = options["ArticleType"].(string)
+	a.articleOwnerID, _ = options["ArticleOwner"].(string)
 
 	db.Update(func(tx *bolt.Tx) error {
 
 		a.newArticleID(tx)
+		a.saveArticleOwner(tx)
 		a.saveArticleType(tx)
 
 		created := a.Created(tx, ArticleCreatedBucket)
@@ -105,21 +117,21 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 		dbg.Printf("Created: %v", created)
 		dbg.Printf("Updated: %v", updated)
 
-		switch a.ArticleType {
+		switch a.articleType {
 
 		case ArticleTypeLink:
 			a.LinkArticle.article = &a
-			a.initLinkArticle(values)
+			a.initLinkArticle(options)
 			a.saveLinkArticle(tx)
 
 		case ArticleTypeGist:
 			a.GistArticle.article = &a
-			a.initGistArticle(values)
+			a.initGistArticle(options)
 			a.saveGistArticle(tx)
 
 		case ArticleTypeMarkdown:
 			a.MarkdownArticle.article = &a
-			a.initMarkdownArticle(values)
+			a.initMarkdownArticle(options)
 			a.saveGistArticle(tx)
 
 		}
@@ -134,19 +146,19 @@ func NewArticle(db *bolt.DB, values map[string]interface{}) *Article {
 /*
 LoadArticle アーティクルを読み込む
 */
-func LoadArticle(db *bolt.DB, ID string) (*Article, error) {
+func LoadArticle(db *bolt.DB, id string) (*Article, error) {
 
 	var a Article
-	a.ID = ID
+	a.id = id
 
 	err := db.View(func(tx *bolt.Tx) error {
 
 		a.loadArticleType(tx)
 
-		dbg.Printf("ArticleType: %v", a.ArticleType)
+		dbg.Printf("ArticleType: %v", a.articleType)
 
 		// value set
-		switch a.ArticleType {
+		switch a.articleType {
 
 		case ArticleTypeLink:
 			a.LinkArticle.article = &a
@@ -179,7 +191,7 @@ func (a *Article) SaveArticle(db *bolt.DB) error {
 
 	return db.Batch(func(tx *bolt.Tx) error {
 
-		switch a.ArticleType {
+		switch a.articleType {
 
 		case ArticleTypeLink:
 			a.saveLinkArticle(tx)
@@ -196,10 +208,37 @@ func (a *Article) SaveArticle(db *bolt.DB) error {
 	})
 }
 
+func (a *Article) saveArticleOwner(tx *bolt.Tx) error {
+
+	var b *bolt.Bucket
+
+	b = tx.Bucket(s2b(ArticleOwnerIDToArticleIDBucket))
+	b.Put(s2b("owner-"+a.articleOwnerID+a.id), s2b(a.id))
+
+	b = tx.Bucket(s2b(ArticleIDToArticleOwnerIDBucket))
+	b.Put(s2b("article-"+a.id+a.articleOwnerID), s2b(a.articleOwnerID))
+
+	return nil
+}
+
+func (a *Article) loadArticleOwnerID(tx *bolt.Tx) error {
+
+	c := tx.Bucket(s2b(ArticleOwnerIDToArticleIDBucket)).Cursor()
+
+	prefix := s2b("article-" + a.articleOwnerID)
+
+	for k, v := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, v = c.Next() {
+
+		a.articleOwnerID = b2s(v)
+	}
+
+	return nil
+}
+
 func (a *Article) saveArticleType(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleTypeBucket))
-	b.Put(s2b(a.ID), s2b(a.ArticleType))
+	b.Put(s2b(a.id), s2b(a.articleType))
 
 	return nil
 }
@@ -207,7 +246,7 @@ func (a *Article) saveArticleType(tx *bolt.Tx) error {
 func (a *Article) loadArticleType(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleTypeBucket))
-	a.ArticleType = b2s(b.Get(s2b(a.ID)))
+	a.articleType = b2s(b.Get(s2b(a.id)))
 
 	return nil
 }

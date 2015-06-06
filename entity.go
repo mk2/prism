@@ -15,26 +15,31 @@ const (
 /*
 EntityInterface Entityの基本的な情報にアクセスするためのインターフェース
 */
-type EntityInterface interface {
+type EntityIface interface {
 	GetID() string
 	Created() time.Time
 	Updated() time.Time
+	IsVisible() bool
 }
 
 /*
 Entity 基本的なID振り機能を持たせるための構造
 */
 type Entity struct {
-	ID string
-
-	Accessible string
+	id         string
+	accessible string
 	created    time.Time
 	updated    time.Time
 }
 
 func (e *Entity) GetID() string {
 
-	return e.ID
+	return e.id
+}
+
+func (e *Entity) IsVisible() bool {
+
+	return e.accessible == YesAccessible
 }
 
 func (e *Entity) newID(tx *bolt.Tx, bucketName string, key string) error {
@@ -49,7 +54,7 @@ func (e *Entity) newID(tx *bolt.Tx, bucketName string, key string) error {
 
 	b.Put(s2b(key), i2b(newID))
 
-	e.ID = i2s(newID)
+	e.id = i2s(newID)
 
 	return nil
 }
@@ -60,7 +65,7 @@ func (e *Entity) Created(tx *bolt.Tx, bucketName string) time.Time {
 	created := e.created.Format(CreateUpdatedLayout)
 
 	b := tx.Bucket(s2b(bucketName))
-	b.Put(s2b(e.ID), s2b(created))
+	b.Put(s2b(e.id), s2b(created))
 
 	return e.created
 }
@@ -71,7 +76,7 @@ func (e *Entity) Updated(tx *bolt.Tx, bucketName string) time.Time {
 	updated := e.updated.Format(CreateUpdatedLayout)
 
 	b := tx.Bucket(s2b(bucketName))
-	b.Put(s2b(e.ID), s2b(updated))
+	b.Put(s2b(e.id), s2b(updated))
 
 	return e.updated
 }

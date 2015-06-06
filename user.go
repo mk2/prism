@@ -14,16 +14,22 @@ const (
 	UserUpdatedBucket   = "UserUpdatedBucket"
 )
 
+/*
+AutoProvider type alias for AuthProvider
+*/
+type AuthProvider string
+
 type UserInterface interface {
-	EntityInterface
+	EntityIface
 }
 
 type User struct {
 	Entity
 	GithubUser
-	Name             string
-	UserAuthProvider string
-	Anonymous        string
+
+	name             string
+	userAuthProvider string
+	anonymous        string
 }
 
 func CreateUserBuckets(db *bolt.DB) error {
@@ -105,14 +111,14 @@ func NewUser(db *bolt.DB) *User {
 	return &u
 }
 
-func LoadUser(db *bolt.DB, ID string) *User {
+func LoadUser(db *bolt.DB, id string) *User {
 
 	var u User
-	u.ID = ID
+	u.id = id
 
 	db.View(func(tx *bolt.Tx) error {
 
-		switch u.UserAuthProvider {
+		switch u.userAuthProvider {
 
 		case UserAuthProviderGithub:
 			u.loadGithubUser(tx)
@@ -129,7 +135,7 @@ func (u *User) SaveUser(db *bolt.DB) error {
 
 	return db.Batch(func(tx *bolt.Tx) error {
 
-		switch u.UserAuthProvider {
+		switch u.userAuthProvider {
 
 		case UserAuthProviderGithub:
 			u.saveGithubUser(tx)

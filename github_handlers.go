@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/boltdb/bolt"
 	"github.com/gorilla/sessions"
+	"github.com/boltdb/bolt"
 )
 
 func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
@@ -97,7 +97,7 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 	Respond(res, req, http.StatusOK, map[string]interface{}{
 		"status": "ok",
 		"user": map[string]string{
-			"name": u.Name,
+			"name": u.name,
 		},
 	})
 }

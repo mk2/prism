@@ -6,15 +6,24 @@ const (
 	ArticleGistIDBucket = "ArticleGistIDBucket"
 )
 
+type GistArticleIface interface {
+	GetGistID() string
+}
+
 type GistArticle struct {
-	ArticleInterface
+	ArticleIface
 	article *Article
-	GistID  string
+	gistID string
+}
+
+func (a *GistArticle) GetGistID() string {
+
+	return a.gistID
 }
 
 func (a *GistArticle) initGistArticle(values map[string]interface{}) {
 
-	a.GistID = values["GistID"].(string)
+	a.gistID = values["GistID"].(string)
 }
 
 func (a *GistArticle) loadGistArticle(tx *bolt.Tx) error {
@@ -23,7 +32,7 @@ func (a *GistArticle) loadGistArticle(tx *bolt.Tx) error {
 
 	bID := s2b(a.GetID())
 
-	a.GistID = b2s(b.Get(bID))
+	a.gistID = b2s(b.Get(bID))
 
 	return nil
 }
@@ -34,7 +43,7 @@ func (a *GistArticle) saveGistArticle(tx *bolt.Tx) error {
 
 	bID := s2b(a.GetID())
 
-	b.Put(bID, s2b(a.GistID))
+	b.Put(bID, s2b(a.gistID))
 
 	return nil
 }

@@ -9,11 +9,24 @@ import (
 
 func ArticlesSearchHandler(res http.ResponseWriter, req *http.Request) {
 
+	dbg.Printf("Article search request incoming")
+
+	method := req.Method
+
+	switch method {
+
+	case "GET":
+		Respond(res, req, http.StatusOK, "ok")
+		return
+
+	}
+
+	RespondErr(res, req, http.StatusBadRequest, "unsupported method type"+method)
 }
 
 func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 
-	dbg.Printf("Article request incoming")
+	dbg.Printf("Article crud request incoming")
 
 	method := req.Method
 
@@ -22,6 +35,7 @@ func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 	path := NewPath(req.URL.Path)
 
 	switch method {
+
 	case "GET":
 		if !path.hasID() {
 			RespondErr(res, req, http.StatusBadRequest, "no id")
@@ -29,9 +43,11 @@ func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 		}
 		articlesGetHandler(res, req, path.ID)
 		return
+
 	case "POST":
 		articlesPostHandler(res, req)
 		return
+
 	case "PUT":
 		if !path.hasID() {
 			RespondErr(res, req, http.StatusBadRequest, "no id")
@@ -39,6 +55,7 @@ func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 		}
 		articlesPutHandler(res, req, path.ID)
 		return
+
 	case "DELETE":
 		if !path.hasID() {
 			RespondErr(res, req, http.StatusBadRequest, "no id")
@@ -46,6 +63,7 @@ func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
 		}
 		articlesDeleteHandler(res, req, path.ID)
 		return
+
 	}
 
 	RespondErr(res, req, http.StatusBadRequest, "not found")

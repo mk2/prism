@@ -87,9 +87,11 @@ func WithUser(fn http.HandlerFunc) http.HandlerFunc {
 
 		if exist {
 			// アクセストークンがあればユーザー情報をロード
+			dbg.Printf("Already logined")
 			u = LoadGithubUser(db, accessToken.(string))
 		} else {
 			// 無ければ匿名ユーザー情報を作成する
+			dbg.Printf("Anonymous User")
 			u = NewUser(db)
 		}
 
