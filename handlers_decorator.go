@@ -12,31 +12,31 @@ import (
 
 func WithVars(fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
-		OpenVars(req)
-		defer CloseVars(req)
-		fn(res, req)
+	return func(w http.ResponseWriter, r *http.Request) {
+		OpenVars(r)
+		defer CloseVars(r)
+		fn(w, r)
 	}
 }
 
 func WithBoltDB(db *bolt.DB, fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
-		SetVar(req, "boltDB", db)
-		fn(res, req)
+	return func(w http.ResponseWriter, r *http.Request) {
+		SetVar(r, "boltDB", db)
+		fn(w, r)
 	}
 }
 
 func WithLogin(fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
-		fn(res, req)
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r)
 	}
 }
 
 func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 
 		var envvar struct {
 			GithubAPIKey    string `env:"GITHUB_CLIENTID,required"`
@@ -48,36 +48,36 @@ func WithEnvVars(fn http.HandlerFunc) http.HandlerFunc {
 			log.Fatalln(err)
 		}
 
-		SetVar(req, "GithubClientID", envvar.GithubAPIKey)
-		SetVar(req, "GithubClientSecret", envvar.GithubAPISecret)
-		SetVar(req, "SessionSecret", envvar.SessionSecret)
+		SetVar(r, "GithubClientID", envvar.GithubAPIKey)
+		SetVar(r, "GithubClientSecret", envvar.GithubAPISecret)
+		SetVar(r, "SessionSecret", envvar.SessionSecret)
 
-		fn(res, req)
+		fn(w, r)
 	}
 }
 
 func WithSessionStore(fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-		sessionSecret := GetVar(req, "SessionSecret").(string)
+		sessionSecret := GetVar(r, "SessionSecret").(string)
 
 		sstore := sessions.NewCookieStore(s2b(sessionSecret))
 
-		SetVar(req, "SessionStore", sstore)
+		SetVar(r, "SessionStore", sstore)
 
-		fn(res, req)
+		fn(w, r)
 	}
 }
 
 func WithUser(fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-		db := GetVar(req, "boltDB").(*bolt.DB)
+		db := GetVar(r, "boltDB").(*bolt.DB)
 
-		sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
-		session, _ := sessionStore.Get(req, "prism")
+		sessionStore := GetVar(r, "SessionStore").(*sessions.CookieStore)
+		session, _ := sessionStore.Get(r, "prism")
 
 		accessToken, exist := session.Values["gh_access_token"]
 
@@ -95,21 +95,23 @@ func WithUser(fn http.HandlerFunc) http.HandlerFunc {
 			u = NewUser(db)
 		}
 
-		SetVar(req, "CurrentUser", u)
+		dbg.Printf("CurrentUser: %v", u)
 
-		fn(res, req)
+		SetVar(r, "CurrentUser", u)
+
+		fn(w, r)
 	}
 }
 
 func WithCORS(fn http.HandlerFunc) http.HandlerFunc {
 
-	return func(res http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if env.Debug {
-			res.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
 		} else {
-			res.Header().Set("Access-Control-Allow-Origin", "https://prism-client.github.io")
+			w.Header().Set("Access-Control-Allow-Origin", "https://prism-client.github.io")
 		}
-		res.Header().Set("Access-Control-Allow-Credentials", "true")
-		fn(res, req)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		fn(w, r)
 	}
 }

@@ -46,3 +46,21 @@ func TestNewArticleID(t *testing.T) {
 		currentArticleID = nextArticleID
 	}
 }
+
+func TestNewGistArticle(t *testing.T) {
+
+	var a, ownerID, gistID, db = &Article{}, "1", "1", NewTestDB()
+
+	a = NewArticle(db, map[string]interface{}{
+		"ArticleType":    ArticleTypeGist,
+		"ArticleOwnerID": ownerID,
+		"GistID":         gistID,
+	})
+
+	dbg.Printf("Article: %v", a)
+
+	if a == nil {
+		t.Errorf("NewArticle generation faild")
+	}
+
+}

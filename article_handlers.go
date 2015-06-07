@@ -7,71 +7,74 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-func ArticlesSearchHandler(res http.ResponseWriter, req *http.Request) {
+func ArticlesSearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	dbg.Printf("Article search request incoming")
 
-	method := req.Method
+	method := r.Method
+	db := GetVar(r, "boltDB").(*bolt.DB)
+	u := GetVar(r, "CurrentUser").(*User)
 
 	switch method {
 
 	case "GET":
-		Respond(res, req, http.StatusOK, "ok")
+		as, _ := GetAllOwnerArticles(db, u.id)
+		Respond(w, r, http.StatusOK, as)
 		return
 
 	}
 
-	RespondErr(res, req, http.StatusBadRequest, "unsupported method type"+method)
+	RespondErr(w, r, http.StatusBadRequest, "unsupported method type"+method)
 }
 
-func ArticlesCRUDHandlers(res http.ResponseWriter, req *http.Request) {
+func ArticlesCRUDHandlers(w http.ResponseWriter, r *http.Request) {
 
 	dbg.Printf("Article crud request incoming")
 
-	method := req.Method
+	method := r.Method
 
-	dbg.Printf("%v", req)
+	dbg.Printf("%v", r)
 
-	path := NewPath(req.URL.Path)
+	path := NewPath(r.URL.Path)
 
 	switch method {
 
 	case "GET":
 		if !path.hasID() {
-			RespondErr(res, req, http.StatusBadRequest, "no id")
+			RespondErr(w, r, http.StatusBadRequest, "no id")
 			return
 		}
-		articlesGetHandler(res, req, path.ID)
+		articlesGetHandler(w, r, path.ID)
 		return
 
 	case "POST":
-		articlesPostHandler(res, req)
+		articlesPostHandler(w, r)
 		return
 
 	case "PUT":
 		if !path.hasID() {
-			RespondErr(res, req, http.StatusBadRequest, "no id")
+			RespondErr(w, r, http.StatusBadRequest, "no id")
 			return
 		}
-		articlesPutHandler(res, req, path.ID)
+		articlesPutHandler(w, r, path.ID)
 		return
 
 	case "DELETE":
 		if !path.hasID() {
-			RespondErr(res, req, http.StatusBadRequest, "no id")
+			RespondErr(w, r, http.StatusBadRequest, "no id")
 			return
 		}
-		articlesDeleteHandler(res, req, path.ID)
+		articlesDeleteHandler(w, r, path.ID)
 		return
 
 	}
 
-	RespondErr(res, req, http.StatusBadRequest, "not found")
+	RespondErr(w, r, http.StatusBadRequest, "not found")
 }
 
-func articlesGetHandler(res http.ResponseWriter, req *http.Request, ID string) {
+func articlesGetHandler(w http.ResponseWriter, r *http.Request, ID string) {
 
-	db := GetVar(req, "boltDB").(*bolt.DB)
+	db := GetVar(r, "boltDB").(*bolt.DB)
 
 	dbg.Printf("ID: %d", ID)
 
@@ -79,13 +82,13 @@ func articlesGetHandler(res http.ResponseWriter, req *http.Request, ID string) {
 
 	dbg.Printf("Article: %v", a)
 
-	Respond(res, req, http.StatusOK, *a)
+	Respond(w, r, http.StatusOK, *a)
 }
 
-func articlesPostHandler(res http.ResponseWriter, req *http.Request) {
+func articlesPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	db := GetVar(req, "boltDB").(*bolt.DB)
-	jd := json.NewDecoder(req.Body)
+	db := GetVar(r, "boltDB").(*bolt.DB)
+	jd := json.NewDecoder(r.Body)
 
 	var d ArticleDto
 	jd.Decode(&d)
@@ -99,15 +102,15 @@ func articlesPostHandler(res http.ResponseWriter, req *http.Request) {
 	d.update(a)
 	a.SaveArticle(db)
 
-	Respond(res, req, http.StatusOK, map[string]interface{}{
+	Respond(w, r, http.StatusOK, map[string]interface{}{
 		"ArticleID": a.GetID(),
 	})
 }
 
-func articlesPutHandler(res http.ResponseWriter, req *http.Request, ID string) {
+func articlesPutHandler(w http.ResponseWriter, r *http.Request, ID string) {
 
-	db := GetVar(req, "boltDB").(*bolt.DB)
-	jd := json.NewDecoder(req.Body)
+	db := GetVar(r, "boltDB").(*bolt.DB)
+	jd := json.NewDecoder(r.Body)
 
 	var d ArticleDto
 	jd.Decode(&d)
@@ -118,9 +121,9 @@ func articlesPutHandler(res http.ResponseWriter, req *http.Request, ID string) {
 	a, _ := LoadArticle(db, ID)
 	d.update(a)
 
-	Respond(res, req, http.StatusOK, "ok")
+	Respond(w, r, http.StatusOK, "ok")
 }
 
-func articlesDeleteHandler(res http.ResponseWriter, req *http.Request, ID string) {
-	RespondErr(res, req, http.StatusInternalServerError, "not implemented")
+func articlesDeleteHandler(w http.ResponseWriter, r *http.Request, ID string) {
+	RespondErr(w, r, http.StatusInternalServerError, "not implemented")
 }

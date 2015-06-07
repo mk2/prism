@@ -11,9 +11,8 @@ type GistArticleIface interface {
 }
 
 type GistArticle struct {
-	ArticleIface
 	article *Article
-	gistID string
+	gistID  string
 }
 
 func (a *GistArticle) GetGistID() string {
@@ -30,7 +29,7 @@ func (a *GistArticle) loadGistArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleGistIDBucket))
 
-	bID := s2b(a.GetID())
+	bID := s2b(a.article.id)
 
 	a.gistID = b2s(b.Get(bID))
 
@@ -41,7 +40,7 @@ func (a *GistArticle) saveGistArticle(tx *bolt.Tx) error {
 
 	b := tx.Bucket(s2b(ArticleGistIDBucket))
 
-	bID := s2b(a.GetID())
+	bID := s2b(a.article.id)
 
 	b.Put(bID, s2b(a.gistID))
 

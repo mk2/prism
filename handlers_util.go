@@ -15,32 +15,32 @@ var vars map[*http.Request]map[string]interface{}
 var varsLock sync.RWMutex
 
 // GetVar gets the value of the key for the specified http.Request.
-func GetVar(req *http.Request, key string) interface{} {
+func GetVar(r *http.Request, key string) interface{} {
 
 	varsLock.RLock()
-	value := vars[req][key]
+	value := vars[r][key]
 	varsLock.RUnlock()
 	return value
 }
 
 // SetVar sets the key to the value for the specified http.Request.
-func SetVar(req *http.Request, key string, value interface{}) {
+func SetVar(r *http.Request, key string, value interface{}) {
 
 	varsLock.Lock()
-	vars[req][key] = value
+	vars[r][key] = value
 	varsLock.Unlock()
 }
 
 // OpenVars opens the vars for the specified http.Request.
 // Must be called before GetVar or SetVar is called for each
 // request.
-func OpenVars(req *http.Request) {
+func OpenVars(r *http.Request) {
 
 	varsLock.Lock()
 	if vars == nil {
 		vars = map[*http.Request]map[string]interface{}{}
 	}
-	vars[req] = map[string]interface{}{}
+	vars[r] = map[string]interface{}{}
 	varsLock.Unlock()
 }
 
@@ -48,10 +48,10 @@ func OpenVars(req *http.Request) {
 // http.Request.
 // Must be called when all var activity is completed to
 // clean up any used memory.
-func CloseVars(res *http.Request) {
+func CloseVars(r *http.Request) {
 
 	varsLock.Lock()
-	delete(vars, res)
+	delete(vars, r)
 	varsLock.Unlock()
 }
 
@@ -59,10 +59,10 @@ func CloseVars(res *http.Request) {
 // Encode/Decode Utility (originaly written in Go Programming Blueprints)
 //////////////////////////////////////////////////////////////////
 
-func DecodeBody(req *http.Request, v interface{}) error {
+func DecodeBody(r *http.Request, v interface{}) error {
 
-	defer req.Body.Close()
-	return json.NewDecoder(req.Body).Decode(v)
+	defer r.Body.Close()
+	return json.NewDecoder(r.Body).Decode(v)
 }
 
 func EncodeBody(res http.ResponseWriter, req *http.Request, v interface{}) error {
@@ -74,22 +74,22 @@ func EncodeBody(res http.ResponseWriter, req *http.Request, v interface{}) error
 // Response Utility (originaly written in Go Programming Blueprints)
 //////////////////////////////////////////////////////////////////
 
-func Respond(res http.ResponseWriter, req *http.Request, status int, data interface{}) {
+func Respond(w http.ResponseWriter, r *http.Request, status int, data interface{}) {
 
-	res.WriteHeader(status)
+	w.WriteHeader(status)
 	if data != nil {
-		EncodeBody(res, req, data)
+		EncodeBody(w, r, data)
 	}
 }
-func RespondErr(res http.ResponseWriter, req *http.Request, status int, args ...interface{}) {
+func RespondErr(w http.ResponseWriter, r *http.Request, status int, args ...interface{}) {
 
-	Respond(res, req, status, map[string]interface{}{
+	Respond(w, r, status, map[string]interface{}{
 		"error": map[string]interface{}{
 			"message": fmt.Sprint(args...),
 		},
 	})
 }
-func RespondHTTPErr(res http.ResponseWriter, req *http.Request, status int) {
+func RespondHTTPErr(w http.ResponseWriter, r *http.Request, status int) {
 
-	RespondErr(res, req, status, http.StatusText(status))
+	RespondErr(w, r, status, http.StatusText(status))
 }

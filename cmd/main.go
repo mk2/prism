@@ -51,6 +51,9 @@ func setupHandlers(db *bolt.DB, mux *http.ServeMux) {
 	mux.HandleFunc("/auth/github/",
 		withBaseDecorators(db, prism.GithubOAuthHandlers))
 
+	mux.HandleFunc("/gists",
+		withBaseDecorators(db, prism.GistsHandlers))
+
 }
 
 func withBaseDecorators(db *bolt.DB, fn http.HandlerFunc) http.HandlerFunc {

@@ -31,8 +31,12 @@ func LoadGithubUser(db *bolt.DB, accessToken string) *User {
 		b = tx.Bucket(s2b(AccessTokenToGithubUserIDBucket))
 		githubUserID = b2s(b.Get(s2b(accessToken)))
 
+		dbg.Printf("GithubUserID: %s", githubUserID)
+
 		b = tx.Bucket(s2b(GithubUserIDToUserIDBucket))
 		userID = b2s(b.Get(s2b(githubUserID)))
+
+		dbg.Printf("UserID: %s", userID)
 
 		return nil
 	})

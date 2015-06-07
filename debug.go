@@ -20,3 +20,10 @@ func (d debugT) Printf(format string, args ...interface{}) {
 		log.Printf(format, args...)
 	}
 }
+
+func (d debugT) Fatalf(format string, args ...interface{}) {
+
+	if d {
+		log.Fatalf(format, args...)
+	}
+}

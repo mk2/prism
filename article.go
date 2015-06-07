@@ -22,11 +22,12 @@ const (
 )
 
 type ArticleIface interface {
-	EntityIface
 	GistArticleIface
 }
 
 type Article struct {
+	ArticleIface
+
 	Entity
 	LinkArticle
 	GistArticle
@@ -50,6 +51,7 @@ func CreateArticleBuckets(db *bolt.DB) error {
 		ArticleCreatedBucket,
 		ArticleUpdatedBucket,
 		ArticleAccessibleBucket,
+		ArticleGistIDBucket,
 		ArticleTypeBucket,
 		ArticleLinkURLBucket,
 		ArticleMarkdownTextBucket,
@@ -143,6 +145,35 @@ func NewArticle(db *bolt.DB, options map[string]interface{}) *Article {
 	return &a
 }
 
+func LoadArticlesByOwnerID(db *bolt.DB, ownerID string) ([]*Article, error) {
+
+	var as []*Article = make([]*Article, 10)
+	var aids []string = make([]string, 10)
+
+	db.View(func(tx *bolt.Tx) error {
+
+		prefix := s2b("owner-" + ownerID)
+		c := tx.Bucket(s2b(ArticleOwnerIDToArticleIDBucket)).Cursor()
+
+		for k, v := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, v = c.Next() {
+
+			aids = append(aids, b2s(v))
+
+		}
+
+		return nil
+	})
+
+	for _, aid := range aids {
+
+		a, _ := LoadArticle(db, aid)
+		as = append(as, a)
+
+	}
+
+	return as, nil
+}
+
 /*
 LoadArticle アーティクルを読み込む
 */
@@ -154,6 +185,7 @@ func LoadArticle(db *bolt.DB, id string) (*Article, error) {
 	err := db.View(func(tx *bolt.Tx) error {
 
 		a.loadArticleType(tx)
+		a.loadArticleOwnerID(tx)
 
 		dbg.Printf("ArticleType: %v", a.articleType)
 

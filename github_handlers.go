@@ -7,13 +7,15 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gorilla/sessions"
 	"github.com/boltdb/bolt"
+	"github.com/google/go-github/github"
+	"github.com/gorilla/sessions"
+	"golang.org/x/oauth2"
 )
 
-func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
+func GithubOAuthHandlers(w http.ResponseWriter, r *http.Request) {
 
-	tokens := strings.Split(req.URL.Path, "/")
+	tokens := strings.Split(r.URL.Path, "/")
 	action := tokens[3]
 
 	dbg.Printf("action: %s", action)
@@ -21,23 +23,42 @@ func GithubOAuthHandlers(res http.ResponseWriter, req *http.Request) {
 	switch action {
 
 	case "login":
-		githubLoginHandler(res, req)
+		githubLoginHandler(w, r)
 		return
 
 	case "callback":
-		githubCallbackHandler(res, req)
+		githubCallbackHandler(w, r)
 		return
 
 	}
 
-	RespondErr(res, req, http.StatusBadRequest, "invalid request")
+	RespondErr(w, r, http.StatusBadRequest, "invalid request")
 }
 
-func githubLoginHandler(res http.ResponseWriter, req *http.Request) {
+func GistsHandlers(w http.ResponseWriter, r *http.Request) {
+
+	sessionStore := GetVar(r, "SessionStore").(*sessions.CookieStore)
+	session, _ := sessionStore.Get(r, "prism")
+
+	accessToken := session.Values["gh_access_token"]
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: accessToken},
+	)
+	tc := oauth2.NewClient(oauth2.NoContext, ts)
+
+	cli := github.NewClient(tc)
+
+	gists, _, _ := cli.Gists.ListAll(nil)
+
+	Respond(w, r, http.StatusOK, gists)
+}
+
+func githubLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var clientID,
 		state,
-		reqURL string = GetVar(req, "GithubClientID").(string), "dummy", "https://github.com/login/oauth/authorize"
+		reqURL string = GetVar(r, "GithubClientID").(string), "dummy", "https://github.com/login/oauth/authorize"
 
 	q := url.Values{}
 	q.Set("client_id", clientID)
@@ -48,23 +69,23 @@ func githubLoginHandler(res http.ResponseWriter, req *http.Request) {
 
 	dbg.Printf("login url: %s", loginURL)
 
-	res.Header().Set("Location", loginURL)
-	res.WriteHeader(http.StatusTemporaryRedirect)
+	w.Header().Set("Location", loginURL)
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
+func githubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
-	req.ParseForm()
+	r.ParseForm()
 
 	var code,
 		state,
 		clientID,
 		clientSecret,
-		atURL string = req.FormValue("code"), req.FormValue("state"), GetVar(req, "GithubClientID").(string), GetVar(req, "GithubClientSecret").(string), "https://github.com/login/oauth/access_token"
+		atURL string = r.FormValue("code"), r.FormValue("state"), GetVar(r, "GithubClientID").(string), GetVar(r, "GithubClientSecret").(string), "https://github.com/login/oauth/access_token"
 
-	var u *User = GetVar(req, "CurrentUser").(*User)
+	var u *User = GetVar(r, "CurrentUser").(*User)
 
-	var db *bolt.DB = GetVar(req, "boltDB").(*bolt.DB)
+	var db *bolt.DB = GetVar(r, "boltDB").(*bolt.DB)
 
 	dbg.Printf("code: %s", code)
 	dbg.Printf("state: %s", state)
@@ -84,17 +105,17 @@ func githubCallbackHandler(res http.ResponseWriter, req *http.Request) {
 
 	dbg.Printf("AccessToken: %s", accessToken)
 
-	sessionStore := GetVar(req, "SessionStore").(*sessions.CookieStore)
-	session, _ := sessionStore.Get(req, "prism")
+	sessionStore := GetVar(r, "SessionStore").(*sessions.CookieStore)
+	session, _ := sessionStore.Get(r, "prism")
 
 	session.Values["gh_access_token"] = accessToken
-	session.Save(req, res)
+	session.Save(r, w)
 
 	u.AccessToken = accessToken
 
 	u.SaveUser(db)
 
-	Respond(res, req, http.StatusOK, map[string]interface{}{
+	Respond(w, r, http.StatusOK, map[string]interface{}{
 		"status": "ok",
 		"user": map[string]string{
 			"name": u.name,
