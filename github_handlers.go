@@ -40,7 +40,7 @@ func GistsHandlers(w http.ResponseWriter, r *http.Request) {
 	sessionStore := GetVar(r, "SessionStore").(*sessions.CookieStore)
 	session, _ := sessionStore.Get(r, "prism")
 
-	accessToken := session.Values["gh_access_token"]
+	accessToken := session.Values["gh_access_token"].(string)
 
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: accessToken},
@@ -49,9 +49,15 @@ func GistsHandlers(w http.ResponseWriter, r *http.Request) {
 
 	cli := github.NewClient(tc)
 
-	gists, _, _ := cli.Gists.ListAll(nil)
+	dbg.Printf("Client: %v", cli)
 
-	Respond(w, r, http.StatusOK, gists)
+	//gists, _, _ := cli.Gists.List("", nil)
+
+	Respond(w, r, http.StatusOK, []map[string]interface{}{
+		map[string]interface{}{
+			"created_at": "okokok",
+		},
+	})
 }
 
 func githubLoginHandler(w http.ResponseWriter, r *http.Request) {
